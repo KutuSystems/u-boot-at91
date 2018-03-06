@@ -1,0 +1,7 @@
+SAMA5D2 PTC EK BOARD
+M:	Wenyou Yang <wenyou.yang@microchip.com>
+M:	Ludovic Desroches <ludovic.desroches@microchip.com>
+S:	Maintained
+F:	board/atmel/sama5d2_avatar/
+F:	include/configs/sama5d2_avatar.h
+F:	configs/sama5d2_avatar_nandflash_defconfig
