@@ -497,6 +497,11 @@ config CMD_GPIO
 	help
 	  GPIO support.
 
+config CMD_ADC_TEST
+	bool "gpio"
+	help
+	  Support for ADC hardware testing.
+
 endmenu
 
 

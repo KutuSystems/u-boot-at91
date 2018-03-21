@@ -49,20 +49,20 @@ static void board_nand_hw_init(void)
 	       AT91_SMC_MODE_TDF_CYCLE(3),
 	       &smc->cs[3].mode);
 
-   atmel_pio4_set_f_periph(AT91_PIO_PORTA, 0, 0);	/* D0 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 1, 0);	/* D1 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 2, 0);	/* D2 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 3, 0);	/* D3 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 4, 0);	/* D4 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 5, 0);	/* D5 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 6, 0);	/* D6 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 7, 0);	/* D7 */
+   atmel_pio4_set_f_periph(AT91_PIO_PORTA, 0, ATMEL_PIO_DRVSTR_ME);	/* D0 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 1, ATMEL_PIO_DRVSTR_ME);	/* D1 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 2, ATMEL_PIO_DRVSTR_ME);	/* D2 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 3, ATMEL_PIO_DRVSTR_ME);	/* D3 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 4, ATMEL_PIO_DRVSTR_ME);	/* D4 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 5, ATMEL_PIO_DRVSTR_ME);	/* D5 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 6, ATMEL_PIO_DRVSTR_ME);	/* D6 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 7, ATMEL_PIO_DRVSTR_ME);	/* D7 */
 	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 12, 0);	/* RE */
 	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 8, 0);	/* WE */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 9, 1);	/* NCS */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 10, 1);	/* ALE */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 11, 1);	/* CLE */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTC, 8, 1);	/* RDY */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 9, ATMEL_PIO_PUEN_MASK);	/* NCS */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 10, ATMEL_PIO_PUEN_MASK);	/* ALE */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 11, ATMEL_PIO_PUEN_MASK);	/* CLE */
+	atmel_pio4_set_b_periph(AT91_PIO_PORTC, 8, ATMEL_PIO_PUEN_MASK);	/* RDY */
 
 }
 #endif
@@ -75,7 +75,7 @@ static void board_usb_hw_init(void)
 #ifdef CONFIG_DEBUG_UART_BOARD_INIT
 static void board_uart1_hw_init(void)
 {
-	atmel_pio4_set_a_periph(AT91_PIO_PORTD, 2, 1);	/* URXD1 */
+	atmel_pio4_set_a_periph(AT91_PIO_PORTD, 2, ATMEL_PIO_PUEN_MASK);	/* URXD1 */
 	atmel_pio4_set_a_periph(AT91_PIO_PORTD, 3, 0);	/* UTXD1 */
 
 	at91_periph_clk_enable(ATMEL_ID_UART1);

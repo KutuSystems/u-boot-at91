@@ -694,13 +694,13 @@ static void atmel_pmecc_core_init(struct mtd_info *mtd)
  * Return 0 if success. otherwise return the error code.
  */
 static int pmecc_choose_ecc(struct atmel_nand_host *host,
-		struct nand_chip *chip,
+	   struct nand_chip *chip, uint32_t writesize,
 		int *cap, int *sector_size)
 {
 	/* Get ECC requirement from ONFI parameters */
 	*cap = *sector_size = 0;
 	if (chip->onfi_version) {
-		*cap = chip->ecc_strength_ds;
+      *cap = chip->ecc_strength_ds * (writesize / chip->ecc_step_ds);
 		*sector_size = chip->ecc_step_ds;
 		MTDDEBUG(MTD_DEBUG_LEVEL1, "ONFI params, minimum required ECC: %d bits in %d bytes\n",
 			 *cap, *sector_size);
@@ -829,7 +829,7 @@ static int atmel_pmecc_nand_init_params(struct nand_chip *nand,
 	 * CONFIG_PMECC_SECTOR_SIZE not defined, then use ecc_bits, sector_size
 	 * from ONFI.
 	 */
-	if (pmecc_choose_ecc(host, nand, &cap, &sector_size)) {
+	if (pmecc_choose_ecc(host, nand, mtd->writesize, &cap, &sector_size)) {
 		dev_err(host->dev, "Required ECC %d bits in %d bytes not supported!\n",
 			cap, sector_size);
 		return -EINVAL;
@@ -1507,9 +1507,14 @@ int atmel_nand_chip_init(int devnum, ulong base_addr)
 	nand->bbt_options |= NAND_BBT_USE_FLASH;
 #endif
 
-	ret = nand_scan_ident(mtd, CONFIG_SYS_NAND_MAX_CHIPS, NULL);
+   dev_err(host->dev, "atmel_nand: start_scan_ident\n");
+
+	//ret = nand_scan_ident(mtd, CONFIG_SYS_NAND_MAX_CHIPS, NULL);
+	ret = nand_scan_ident(mtd, 1, NULL);
 	if (ret)
 		return ret;
+
+   dev_err(host->dev, "atmel_nand: scan worked\n");
 
 #ifdef CONFIG_ATMEL_NAND_HWECC
 #ifdef CONFIG_ATMEL_NAND_HW_PMECC
@@ -1531,6 +1536,9 @@ int atmel_nand_chip_init(int devnum, ulong base_addr)
 void board_nand_init(void)
 {
 	int i;
+
+   dev_err(host->dev, "atmel_nand: nand init CONFIG_SYS_MAX_NAND_DEVICE=%d\n",CONFIG_SYS_MAX_NAND_DEVICE);
+
 	for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++)
 		if (atmel_nand_chip_init(i, base_addr[i]))
 			dev_err(host->dev, "atmel_nand: Fail to initialize #%d chip",
