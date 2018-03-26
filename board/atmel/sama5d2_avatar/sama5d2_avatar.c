@@ -120,7 +120,7 @@ int dram_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_CMD_I2C
+/*#ifdef CONFIG_CMD_I2C
 static int set_ethaddr_from_eeprom(void)
 {
 	const int ETH_ADDR_LEN = 6;
@@ -153,12 +153,27 @@ static int set_ethaddr_from_eeprom(void)
 
 	return eth_setenv_enetaddr(ETHADDR_NAME, ethaddr);
 }
+
 #else
+*/
+
 static int set_ethaddr_from_eeprom(void)
 {
-	return 0;
+   unsigned char ethaddr[6];
+	const char *ETHADDR_NAME = "ethaddr";
+
+   ethaddr[0] = 0x01;
+   ethaddr[1] = 0x02;
+   ethaddr[2] = 0x11;
+   ethaddr[3] = 0x11;
+   ethaddr[4] = 0x11;
+   ethaddr[5] = 0x11;
+
+	return eth_setenv_enetaddr(ETHADDR_NAME, ethaddr);
 }
+/*
 #endif
+*/
 
 #ifdef CONFIG_MISC_INIT_R
 int misc_init_r(void)

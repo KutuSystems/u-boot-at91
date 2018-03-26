@@ -1507,14 +1507,9 @@ int atmel_nand_chip_init(int devnum, ulong base_addr)
 	nand->bbt_options |= NAND_BBT_USE_FLASH;
 #endif
 
-   dev_err(host->dev, "atmel_nand: start_scan_ident\n");
-
-	//ret = nand_scan_ident(mtd, CONFIG_SYS_NAND_MAX_CHIPS, NULL);
-	ret = nand_scan_ident(mtd, 1, NULL);
+	ret = nand_scan_ident(mtd, CONFIG_SYS_NAND_MAX_CHIPS, NULL);
 	if (ret)
 		return ret;
-
-   dev_err(host->dev, "atmel_nand: scan worked\n");
 
 #ifdef CONFIG_ATMEL_NAND_HWECC
 #ifdef CONFIG_ATMEL_NAND_HW_PMECC
@@ -1537,11 +1532,8 @@ void board_nand_init(void)
 {
 	int i;
 
-   dev_err(host->dev, "atmel_nand: nand init CONFIG_SYS_MAX_NAND_DEVICE=%d\n",CONFIG_SYS_MAX_NAND_DEVICE);
-
 	for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++)
 		if (atmel_nand_chip_init(i, base_addr[i]))
-			dev_err(host->dev, "atmel_nand: Fail to initialize #%d chip",
-				i);
+			dev_err(host->dev, "atmel_nand: Fail to initialize #%d chip ",i);
 }
 #endif /* CONFIG_SPL_BUILD */

@@ -28,3 +28,11 @@ config ADC_SANDBOX
 	  - 4 analog input channels
 	  - 16-bit resolution
 	  - single and multi-channel conversion mode
+
+config ADC_SAMA5D2
+	bool "Enable SAMA5D2 ADC driver"
+	help
+	  This enables driver for SAMA5D2 ADC device.
+	  It provides:
+	  - 8 analog input channels
+	  - 12-bit resolution
