@@ -9,11 +9,13 @@
 #define CONFIG_USE_STDINT
 
 #include <common.h>
+#include <asm/io.h>
 #include <command.h>
 #include <errno.h>
 #include <dm.h>
 //#include <asm-generic/adc.h>
 #include <sama5d2_adc.h>
+#include <asm/arch/clk.h>
 
 /*----------------------------------------------------------------------------
  *        Local definitions
@@ -149,36 +151,6 @@ static void _display_menu(void)
 	printf("=========================================================\n\r");
 }
 
-
-static void _initialize_adc(void)
-{
-	/* Initialize ADC */
-//	adc_initialize();
-//	adc_set_ts_mode(0);
-	/*
-	 * Formula: ADCClock = MCK / ((PRESCAL+1) * 2)
-	 * For example, MCK = 64MHZ, PRESCAL = 4, then:
-	 *     ADCClock = 64 / ((4+1) * 2) = 6.4MHz;
-	 */
-	/* Set ADC clock */
-//	adc_set_clock(ADC_FREQ);
-
-	/* Formula:
-	 *     Startup  Time = startup value / ADCClock
-	 *     Transfer Time = (TRANSFER * 2 + 3) / ADCClock
-	 *     Tracking Time = (TRACKTIM + 1) / ADCClock
-	 *     Settling Time = settling value / ADCClock
-	 * For example, ADC clock = 6MHz (166.7 ns)
-	 *     Startup time = 512 / 6MHz = 85.3 us
-	 *     Transfer Time = (1 * 2 + 3) / 6MHz = 833.3 ns
-	 *     Tracking Time = (0 + 1) / 6MHz = 166.7 ns
-	 *     Settling Time = 3 / 6MHz = 500 ns
-	 */
-	/* Set ADC timing */
-//	adc_set_timing(ADC_MR_STARTUP_SUT512, 0, 0);
-	/* Enable channel number tag */
-//	adc_set_tag_enable(true);
-}
 
 /**
  * \brief (Re)Sart ADC sample.
@@ -362,7 +334,7 @@ static int do_adc_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 	/* Output example information */
 	printf("\n\nADC12 hardware test\n\n");
 
-	if (argc < 2)
+	if (argc > 2)
 		return CMD_RET_USAGE;
 	str_cmd = argv[1];
 	argc -= 2;
@@ -391,9 +363,13 @@ static int do_adc_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 	test_mode.sequence_enabled = 0;
 
 	/* Initialize ADC clock */
-	_initialize_adc();
+
+   printf("Initialize ADC\n");
+   adc_initialize();
 	/* Init ADC config */
 	_set_adc_configuration();
+
+   printf("ADC Clock Frequency is %dHz\n",at91_get_periph_generated_clk(ATMEL_ID_ADC));
 
 	_display_menu();
 
@@ -411,15 +387,6 @@ static int do_adc_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
    }
 
    printf("NUM_CHANNELS: %d\n ", NUM_CHANNELS);
-
-
-   printf("Call adc_initialize\n");
-   adc_initialize();
-   printf("adc_initialize complete\n");
-
-
-//   return 0;
-
 
    /* Check if ADC sample is done */
    if (_data.done) {
@@ -444,7 +411,5 @@ static int do_adc_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 }
 
 U_BOOT_CMD(adc_test, 4, 0, do_adc_test,
-	   "query and control adc pins",
-	   "<input|set|clear|toggle> <pin>\n"
-	   "    - input/set/clear/toggle the specified pin\n"
-	   "adc test status [-a] [<bank> | <pin>]  - show [all/claimed] GPIOs");
+	   "read adc channels",
+	   "<read|status> \n");

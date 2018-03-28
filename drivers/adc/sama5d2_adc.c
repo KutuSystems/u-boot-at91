@@ -58,7 +58,10 @@
 
 //#include "chip.h"
 #include <common.h>
+#include <asm/io.h>
 #include <sama5d2_adc.h>
+#include <asm/arch/clk.h>
+
 //#include "peripherals/pmc.h"
 #include "component_pmc.h"
 #include "component_adc.h"
@@ -88,169 +91,6 @@ static uint32_t _adc_clock = 0;
  *        Internal static functions
  *----------------------------------------------------------------------------*/
 
-static uint32_t pmc_get_slow_clock(void)
-{
-   return BOARD_SLOW_CLOCK_EXT_OSC; /* external crystal */
-}
-
-static uint32_t pmc_get_main_clock(void)
-{
-	if (PMC->CKGR_MOR & CKGR_MOR_MOSCSEL)
-		return MAIN_CLOCK_INT_OSC; /* on-chip main clock RC */
-	else
-		return BOARD_MAIN_CLOCK_EXT_OSC; /* external crystal */
-}
-
-static uint32_t pmc_get_plla_clock(void)
-{
-	uint32_t pllaclk, pllar, pllmula, plldiva;
-
-	if (PMC->CKGR_MOR & CKGR_MOR_MOSCSEL)
-		pllaclk = MAIN_CLOCK_INT_OSC; /* on-chip main clock RC */
-	else
-		pllaclk = BOARD_MAIN_CLOCK_EXT_OSC; /* external crystal */
-
-	pllar = PMC->CKGR_PLLAR;
-	pllmula = (pllar & CKGR_PLLAR_MULA_Msk) >> CKGR_PLLAR_MULA_Pos;
-	plldiva = (pllar & CKGR_PLLAR_DIVA_Msk) >> CKGR_PLLAR_DIVA_Pos;
-	if (plldiva == 0 || pllmula == 0) {
-		pllaclk = 0;
-	} else {
-		pllaclk = pllaclk * (pllmula + 1) / plldiva;
-		if (PMC->PMC_MCKR & PMC_MCKR_PLLADIV2)
-			pllaclk >>= 1;
-	}
-
-	return pllaclk;
-}
-
-
-uint32_t pmc_get_master_clock(void)
-{
-	uint32_t clk = 0;
-	uint32_t mckr = PMC->PMC_MCKR;
-
-	uint32_t css = mckr & PMC_MCKR_CSS_Msk;
-	switch (css) {
-	case PMC_MCKR_CSS_SLOW_CLK:
-		clk = pmc_get_slow_clock();
-		break;
-	case PMC_MCKR_CSS_MAIN_CLK:
-		clk = pmc_get_main_clock();
-		break;
-	case PMC_MCKR_CSS_PLLA_CLK:
-		clk = pmc_get_plla_clock();
-		break;
-	case PMC_MCKR_CSS_UPLL_CLK:
-		clk = 480000000;
-		break;
-	default:
-		/* should never get here... */
-		break;
-	}
-
-	uint32_t pres = mckr & PMC_MCKR_PRES_Msk;
-	switch (pres) {
-	case PMC_MCKR_PRES_CLOCK:
-		break;
-	case PMC_MCKR_PRES_CLOCK_DIV2:
-		clk >>= 1;
-		break;
-	case PMC_MCKR_PRES_CLOCK_DIV4:
-		clk >>= 2;
-		break;
-	case PMC_MCKR_PRES_CLOCK_DIV8:
-		clk >>= 3;
-		break;
-	case PMC_MCKR_PRES_CLOCK_DIV16:
-		clk >>= 4;
-		break;
-	case PMC_MCKR_PRES_CLOCK_DIV32:
-		clk >>= 5;
-		break;
-	case PMC_MCKR_PRES_CLOCK_DIV64:
-		clk >>= 6;
-		break;
-	default:
-		/* should never get here... */
-		break;
-	}
-
-	uint32_t mdiv = mckr & PMC_MCKR_MDIV_Msk;
-	switch (mdiv) {
-	case PMC_MCKR_MDIV_EQ_PCK:
-		break;
-	case PMC_MCKR_MDIV_PCK_DIV2:
-		clk >>= 1; // divide by 2
-		break;
-	case PMC_MCKR_MDIV_PCK_DIV4:
-		clk >>= 2; // divide by 4
-		break;
-	case PMC_MCKR_MDIV_PCK_DIV3:
-		clk /= 3;  // divide by 3
-		break;
-	default:
-		/* should never get here... */
-		break;
-	}
-
-	return(clk);
-}
-
-
-static uint32_t pmc_get_peripheral_clock(uint32_t id)
-{
-	uint32_t div;
-
-   if (PMC->PMC_MCKR & PMC_MCKR_H32MXDIV_H32MXDIV2)
-      div = 2;
-   else
-      div = 1;
-
-
-#ifdef PMC_PCR_DIV
-   PMC->PMC_PCR = PMC_PCR_PID(id);
-	volatile uint32_t pcr = PMC->PMC_PCR;
-	div *= (1 << ((pcr & PMC_PCR_DIV_Msk) >> PMC_PCR_DIV_Pos));
-#endif
-
-	if (div)
-		return pmc_get_master_clock() / div;
-
-	return 0;
-}
-
-static void pmc_enable_peripheral(uint32_t id)
-{
-	uint32_t div = 0;
-
-	// select peripheral
-	PMC->PMC_PCR = PMC_PCR_PID(id);
-
-#ifdef PMC_PCR_DIV
-	PMC->PMC_PCR = (PMC->PMC_PCR & ~PMC_PCR_DIV_Msk) | PMC_PCR_CMD;
-	{
-		volatile uint32_t i;
-		uint32_t clk_max;
-
-		clk_max = get_peripheral_clock_max_freq(id);
-		for (i = 0 ; i < 4 ; i++)
-			if ((pmc_get_master_clock() >> i) <= clk_max)
-				break;
-
-		if (i == 4)
-			i = 3; /* 4 is not a valid value */
-		div = PMC_PCR_DIV(i);
-	}
-#else
-	PMC->PMC_PCR = PMC->PMC_PCR | PMC_PCR_CMD;
-#endif
-
-	PMC->PMC_PCR = PMC_PCR_PID(id);
-	volatile uint32_t pcr = PMC->PMC_PCR;
-	PMC->PMC_PCR = pcr | div | PMC_PCR_CMD | PMC_PCR_EN;
-}
-
 
 /*----------------------------------------------------------------------------
  *        Exported functions
@@ -276,8 +116,16 @@ uint32_t adc_get_resolution(void)
  */
 void adc_initialize(void)
 {
-	/* Enable peripheral clock */
-	pmc_enable_peripheral(ID_ADC);
+   int clk;
+
+	/* Enable peripheral clock at 1MHz*/
+	at91_enable_periph_generated_clk(ATMEL_ID_ADC, GCK_CSS_MAIN_CLK, 11);
+
+   clk = at91_get_periph_generated_clk(ATMEL_ID_ADC);
+
+   printf("PLLA clock is : %ld Hz\r\n", get_plla_clk_rate());
+   printf("MCK clock is : %ld Hz\r\n", get_mck_clk_rate());
+   printf("ADC clock is : %d Hz\r\n", clk);
 
 	/*  Reset the controller */
 	ADC->ADC_CR = ADC_CR_SWRST;
@@ -296,13 +144,17 @@ void adc_initialize(void)
 uint32_t adc_set_clock(uint32_t adc_clk)
 {
 	uint32_t prescale, mode_reg;
-	uint32_t pck = pmc_get_peripheral_clock(ID_ADC);
-	/* Formula for PRESCAL is:
+	uint32_t pck;
+
+   pck = at91_get_periph_generated_clk(ATMEL_ID_ADC);
+
+ 	/* Formula for PRESCAL is:
 	   ADCClock = PCK / ( (PRESCAL+1) * 2 )
 	   PRESCAL = (PCK / (2 * ADCCLK)) - 1
 	   First, we do the division, multiplied by 10 to get higher precision
 	   If the last digit is not zero, we round up to avoid generating a higher
 	   than required frequency. */
+
 	prescale = (pck * 5) / adc_clk;
 	if (prescale % 10)
 		prescale = prescale / 10;
@@ -494,7 +346,7 @@ uint8_t adc_check_configuration(void)
 	uint32_t mode_reg;
 	uint32_t prescale;
 	uint32_t clock;
-	uint32_t mck = pmc_get_peripheral_clock(ID_ADC);
+	uint32_t mck = at91_get_periph_generated_clk(ATMEL_ID_ADC);
 
 	mode_reg = ADC->ADC_MR;
 
