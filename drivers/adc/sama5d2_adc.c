@@ -118,8 +118,11 @@ void adc_initialize(void)
 {
    int clk;
 
+
 	/* Enable peripheral clock at 1MHz*/
-	at91_enable_periph_generated_clk(ATMEL_ID_ADC, GCK_CSS_MAIN_CLK, 11);
+   at91_periph_clk_enable(ATMEL_ID_ADC);
+
+   at91_enable_periph_generated_clk(ATMEL_ID_ADC, GCK_CSS_MAIN_CLK, 11);
 
    clk = at91_get_periph_generated_clk(ATMEL_ID_ADC);
 
@@ -127,11 +130,20 @@ void adc_initialize(void)
    printf("MCK clock is : %ld Hz\r\n", get_mck_clk_rate());
    printf("ADC clock is : %d Hz\r\n", clk);
 
+
 	/*  Reset the controller */
 	ADC->ADC_CR = ADC_CR_SWRST;
 
+   ADC->ADC_WPMR = 0x41444300;
+
+   ADC->ADC_CHER = 0x0ff;
+
 	/* Reset Mode Register */
-	ADC->ADC_MR = 0;
+	ADC->ADC_MR = 0x2000ff00;
+	ADC->ADC_EMR = 0x00000000;
+//   ADC->ADC_SEQR1 = 0x01234567;
+
+
 }
 
 /**
@@ -222,6 +234,7 @@ void adc_set_trigger_mode(uint32_t mode)
 {
 	uint32_t trg_reg = ADC->ADC_TRGR & ~ADC_TRGR_TRGMOD_Msk;
 	ADC->ADC_TRGR = trg_reg | mode;
+
 }
 
 void adc_set_sleep_mode(uint8_t enable)
@@ -529,6 +542,25 @@ void adc_ts_calibration(void)
 {
 	ADC->ADC_CR = ADC_CR_TSCALIB;
 }
+
+void adc_start_conversion(void)
+{
+   uint32_t i,isr_val;
+
+   //ADC->ADC_IER = 0xff;
+
+   ADC->ADC_CR = ADC_CR_START;
+
+   isr_val = ADC->ADC_ISR & 0xff;
+   i = 0;
+   while ((i < 10000000) && (isr_val != 0xff)) {
+      isr_val = ADC->ADC_ISR & 0xff;
+      // printf("Interrupt status register is : 0x%x\r\n",isr_val);
+      i++;
+   }
+
+}
+
 
 void adc_set_ts_mode(uint32_t mode)
 {

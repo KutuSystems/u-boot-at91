@@ -76,8 +76,6 @@ extern "C" {
 
 #define adc_get_mode_reg()             (ADC->ADC_MR)
 
-#define adc_start_conversion()         (ADC->ADC_CR = ADC_CR_START)
-
 #define adc_enable_channel(channel)  {			\
 		ADC->ADC_CHER = (1 << (channel));	\
 	}
@@ -115,6 +113,9 @@ extern "C" {
 /*------------------------------------------------------------------------------
  *         Exported functions
  *------------------------------------------------------------------------------*/
+
+extern void adc_start_conversion(void);
+
 
 /**
  * \brief Returns the number of ADC channels

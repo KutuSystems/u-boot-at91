@@ -80,7 +80,7 @@ typedef struct {
   uint32_t ADC_VERSION;  /**< \brief (Adc Offset: 0xFC) Version Register */
 } Adc;
 
-#define ADC       ((Adc      *)0xFC030000U)   /**< \brief (ADC     ) Base Address */
+#define ADC       ((volatile Adc      *)0xFC030000U)   /**< \brief (ADC     ) Base Address */
 
 /* -------- ADC_CR : (ADC Offset: 0x00) Control Register -------- */
 #define ADC_CR_SWRST (0x1u << 0) /**< \brief (ADC_CR) Software Reset */
