@@ -39,6 +39,14 @@ config SOUND_MAX98095
 	  audio data and I2C for codec control. At present it only works
 	  with the Samsung I2S driver.
 
+config SOUND_SAMA5D2
+	bool "Support sama5d2 audio D-class output"
+	depends on SOUND
+	help
+	  U-Boot plays the sound on the D-CLASS amplifier on the host 
+	  machine. This option implements the sound_init() and sound_play()
+	  functions for the ATSAMA5Dx. Note that only Avatar/Mini-P are supported.
+
 config SOUND_SANDBOX
 	bool "Support sandbox emulated audio codec"
 	depends on SANDBOX && SOUND

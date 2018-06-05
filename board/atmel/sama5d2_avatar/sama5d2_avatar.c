@@ -162,12 +162,12 @@ static int set_ethaddr_from_eeprom(void)
    unsigned char ethaddr[6];
 	const char *ETHADDR_NAME = "ethaddr";
 
-   ethaddr[0] = 0x01;
-   ethaddr[1] = 0x02;
-   ethaddr[2] = 0x11;
-   ethaddr[3] = 0x11;
-   ethaddr[4] = 0x11;
-   ethaddr[5] = 0x11;
+   ethaddr[0] = 0xf0;
+   ethaddr[1] = 0x33;
+   ethaddr[2] = 0xf5;
+   ethaddr[3] = 0x7f;
+   ethaddr[4] = 0x1b;
+   ethaddr[5] = 0xf8;
 
 	return eth_setenv_enetaddr(ETHADDR_NAME, ethaddr);
 }
