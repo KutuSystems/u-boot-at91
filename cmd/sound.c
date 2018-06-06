@@ -15,9 +15,9 @@ DECLARE_GLOBAL_DATA_PTR;
 /* Initilaise sound subsystem */
 static int do_init(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
-	int ret;
+	int ret = 0;
 
-	ret = sound_init(gd->fdt_blob);
+//	ret = sound_init(gd->fdt_blob);
 	if (ret) {
 		printf("Initialise Audio driver failed\n");
 		return CMD_RET_FAILURE;
@@ -32,24 +32,60 @@ static int do_play(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 	int ret = 0;
 	int msec = 1000;
 	int freq = 400;
+	int atten = 0;
 
-	if (argc > 1)
-		msec = simple_strtoul(argv[1], NULL, 10);
-	if (argc > 2)
-		freq = simple_strtoul(argv[2], NULL, 10);
+   printf("\n\nAudio hardware test\n\n");
 
-	ret = sound_play(msec, freq);
+   if (argc > 1) {
+      freq = simple_strtoul(argv[1], NULL, 10);
+      if ((freq > 4) && (freq < 200))
+         return CMD_RET_USAGE;
+
+      // temporary exit
+      if (freq < 200)
+         return CMD_RET_USAGE;
+
+      printf("set frequency at %dhz\n",freq);
+
+   }
+
+	if (argc > 2) {
+      atten = simple_strtoul(argv[2], NULL, 10);
+
+      if (atten > 40)
+         return CMD_RET_USAGE;
+
+       printf("set attenuation at %ddb\n",atten);
+
+   }
+
+   if (argc > 3) {
+      msec = simple_strtoul(argv[3], NULL, 10);
+
+      if (msec > 10000) {
+         msec = 10000;
+         printf("reduced play to 10 seconds max\n");
+      }
+      printf("set play length to %d msecs\n",msec);
+
+   }
+
+   // play out sound
+//	ret = sound_play(msec, freq, attenuation);
+
 	if (ret) {
-		printf("play failed");
+		printf("play failed\n");
 		return CMD_RET_FAILURE;
 	}
+
+	printf("audio play complete\n");
 
 	return 0;
 }
 
 static cmd_tbl_t cmd_sound_sub[] = {
 	U_BOOT_CMD_MKENT(init, 0, 1, do_init, "", ""),
-	U_BOOT_CMD_MKENT(play, 2, 1, do_play, "", ""),
+	U_BOOT_CMD_MKENT(play, 4, 1, do_play, "", ""),
 };
 
 /* process sound command */
@@ -73,8 +109,9 @@ static int do_sound(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 }
 
 U_BOOT_CMD(
-	sound, 4, 1, do_sound,
+	sound, 5, 0, do_sound,
 	"sound sub-system",
 	"init - initialise the sound driver\n"
-	"sound play [len] [freq] - play a sound for len ms at freq hz\n"
+	"play [freq|1|2|3|4] [attenuation in db] [len] - a sound for len ms\n"
+   "at freq hz, or one of 4 wave files\n"
 );

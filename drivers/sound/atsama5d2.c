@@ -10,8 +10,8 @@
 #include <asm/arch/clk.h>
 
 //#include "peripherals/pmc.h"
-#include "component_pmc.h"
-#include "component_adc.h"
+//#include "component_pmc.h"
+//#include "component_adc.h"
 
 int sound_play(uint32_t msec, uint32_t frequency)
 {

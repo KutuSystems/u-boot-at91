@@ -38,19 +38,19 @@
 
 // Classd hardware registers
 typedef struct {
-  __O  uint32_t CLASSD_CR;      /* (Classd Offset: 0x00) Control Register */
-  __IO uint32_t CLASSD_MR;      /* (Classd Offset: 0x04) Mode Register */
-  __IO uint32_t CLASSD_INTPMR;  /* (Classd Offset: 0x08) Interpolator Mode Register */
-  __I  uint32_t CLASSD_INTSR;   /* (Classd Offset: 0x0C) Interpolator Status Register */
-  __IO uint32_t CLASSD_THR;     /* (Classd Offset: 0x10) Transmit Holding Register */
-  __O  uint32_t CLASSD_IER;     /* (Classd Offset: 0x14) Interrupt Enable Register */
-  __O  uint32_t CLASSD_IDR;     /* (Classd Offset: 0x18) Interrupt Disable Register */
-  __IO uint32_t CLASSD_IMR;     /* (Classd Offset: 0x1C) Interrupt Mask Register */
-  __I  uint32_t CLASSD_ISR;     /* (Classd Offset: 0x20) Interrupt Status Register */
-  __I  uint32_t Reserved1[48];
-  __IO uint32_t CLASSD_WPMR;    /* (Classd Offset: 0xE4) Write Protection Mode Register */
-  __I  uint32_t Reserved2[5];
-  __I  uint32_t CLASSD_VERSION; /* (Classd Offset: 0xFC) IP Version Register */
+  uint32_t CLASSD_CR;      /* (Classd Offset: 0x00) Control Register */
+  uint32_t CLASSD_MR;      /* (Classd Offset: 0x04) Mode Register */
+  uint32_t CLASSD_INTPMR;  /* (Classd Offset: 0x08) Interpolator Mode Register */
+  uint32_t CLASSD_INTSR;   /* (Classd Offset: 0x0C) Interpolator Status Register */
+  uint32_t CLASSD_THR;     /* (Classd Offset: 0x10) Transmit Holding Register */
+  uint32_t CLASSD_IER;     /* (Classd Offset: 0x14) Interrupt Enable Register */
+  uint32_t CLASSD_IDR;     /* (Classd Offset: 0x18) Interrupt Disable Register */
+  uint32_t CLASSD_IMR;     /* (Classd Offset: 0x1C) Interrupt Mask Register */
+  uint32_t CLASSD_ISR;     /* (Classd Offset: 0x20) Interrupt Status Register */
+  uint32_t Reserved1[48];
+  uint32_t CLASSD_WPMR;    /* (Classd Offset: 0xE4) Write Protection Mode Register */
+  uint32_t Reserved2[5];
+  uint32_t CLASSD_VERSION; /* (Classd Offset: 0xFC) IP Version Register */
 } Classd;
 
 
