@@ -12,7 +12,7 @@
 //#include "component_pmc.h"
 #include "component_classd.h"
 
-int sound_play(uint32_t msec, uint32_t frequency)
+int sound_play(uint32_t msec, uint32_t frequency, uint32_t attenuation)
 {
 	//sandbox_sdl_sound_start(frequency);
 	mdelay(msec);

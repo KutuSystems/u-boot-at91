@@ -51,6 +51,6 @@ int sound_init(const void *blob);
  *
  * @return	int 0 for success, -1 for error
  */
-int sound_play(uint32_t msec, uint32_t frequency);
+int sound_play(uint32_t msec, uint32_t frequency, uint32_t attenuation);
 
 #endif  /* __SOUND__H__ */
