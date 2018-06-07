@@ -81,6 +81,15 @@ static void board_uart1_hw_init(void)
 	at91_periph_clk_enable(ATMEL_ID_UART1);
 }
 
+static void board_classd_init(void)
+{
+   atmel_pio4_set_f_periph(AT91_PIO_PORTA, 28, 0);	/* D28 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 29, 0);	/* D29 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 30, 0);	/* D30 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 31, 0);	/* D31 */
+}
+
+
 void board_debug_uart_init(void)
 {
 	board_uart1_hw_init();
@@ -109,6 +118,8 @@ int board_init(void)
 #ifdef CONFIG_CMD_USB
 	board_usb_hw_init();
 #endif
+
+   board_classd_init();
 
 	return 0;
 }

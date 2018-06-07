@@ -12,10 +12,47 @@
 //#include "component_pmc.h"
 #include "component_classd.h"
 
+bool classd_configure(int audio_clk);
+
+void Custom_Sine_Function_PlayOnce(uint32_t msec, uint32_t frequency)
+{
+  uint32_t i = 0;
+  int16_t buffer = 0;
+  int16_t value = 0;
+  int32_t audio = 0;
+  int32_t length = msec*48;
+
+  // unmute output
+  //_playback_start();
+
+  do {
+    // last_attn_level = current_attn_level;
+
+    if (CLASSD->CLASSD_ISR & CLASSD_ISR_DATRDY) {
+      CLASSD->CLASSD_THR = audio;
+
+      //buffer = sin(frequency * ((2* 3.14159265359) * i /  48000))*32729;
+
+      buffer += frequency;
+
+      value = buffer;
+      audio = value << 16;
+      audio += value;
+      i++;
+      //printf("Audio Value %d\r\n", buffer);
+    }
+  } while (i < length);
+
+  printf("index %d\n\r",i);
+
+  // mute output
+  //_playback_stop();
+}
+
 int sound_play(uint32_t msec, uint32_t frequency, uint32_t attenuation)
 {
 	//sandbox_sdl_sound_start(frequency);
-	mdelay(msec);
+	Custom_Sine_Function_PlayOnce(msec,frequency);
 	//sandbox_sdl_sound_stop();
 
 	return 0;
@@ -24,6 +61,7 @@ int sound_play(uint32_t msec, uint32_t frequency, uint32_t attenuation)
 int sound_init(const void *blob)
 {
 
+   classd_configure(0);
 	return 0;
 }
 
@@ -38,9 +76,9 @@ bool classd_configure(int audio_clk)
 
    /* Choosing between AudioCLK and USB clock */
    if(audio_clk) {
-      at91_enable_periph_generated_clk(ATMEL_ID_CLASSD, GCK_CSS_MAIN_CLK, 11);
+      at91_enable_periph_generated_clk(ATMEL_ID_CLASSD, GCK_CSS_PLLA_CLK, 4);
    } else {
-      at91_enable_periph_generated_clk(ATMEL_ID_CLASSD, GCK_CSS_UPLL_CLK, 11);
+      at91_enable_periph_generated_clk(ATMEL_ID_CLASSD, GCK_CSS_UPLL_CLK, 4);
    }
 
    clk = at91_get_periph_generated_clk(ATMEL_ID_CLASSD);
@@ -70,17 +108,17 @@ bool classd_configure(int audio_clk)
 
    /* configure left channel (muted, max attn) */
    mr |= CLASSD_MR_LEN;
-   mr |= CLASSD_MR_LMUTE;
-   intpmr |= CLASSD_INTPMR_ATTL(CLASSD_INTPMR_ATTL_Msk);
+//   mr |= CLASSD_MR_LMUTE;
+//   intpmr |= CLASSD_INTPMR_ATTL(CLASSD_INTPMR_ATTL_Msk);
 
    /* configure right channel (muted, max attn)  */
    mr |= CLASSD_MR_REN;
-   mr |= CLASSD_MR_RMUTE;
-   intpmr |= CLASSD_INTPMR_ATTR(CLASSD_INTPMR_ATTL_Msk);
+//   mr |= CLASSD_MR_RMUTE;
+//   intpmr |= CLASSD_INTPMR_ATTR(CLASSD_INTPMR_ATTL_Msk);
 
    /* De-emphasis Filter */
    //if (desc-> de_emphasis)
-   intpmr |= CLASSD_INTPMR_DEEMP;
+//   intpmr |= CLASSD_INTPMR_DEEMP;
 
    /* write configuration */
    CLASSD->CLASSD_MR = mr;
