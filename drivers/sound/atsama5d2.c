@@ -14,39 +14,68 @@
 
 bool classd_configure(int audio_clk);
 
+
+int32_t isin_S4(int32_t x)
+{
+    int32_t c, y;
+    static const int qN= 13, qA= 12, B=19900, C=3516;
+
+    c= x<<(30-qN);              // Semi-circle info into carry.
+    x -= 1<<qN;                 // sine -> cosine calc
+
+    x= x<<(31-qN);              // Mask with PI
+    x= x>>(31-qN);              // Note: SIGNED shift! (to qN)
+    x= x*x>>(2*qN-14);          // x=x^2 To Q14
+
+    y= B - (x*C>>14);           // B - x^2*C
+    y= (1<<qA)-(x*y>>16);       // A - x^2*(B-x^2*C)
+
+    return c>=0 ? y : -y;
+}
+
+
 void Custom_Sine_Function_PlayOnce(uint32_t msec, uint32_t frequency)
 {
-  uint32_t i = 0;
-  int16_t buffer = 0;
-  int16_t value = 0;
-  int32_t audio = 0;
-  int32_t length = msec*48;
+   uint32_t i = 0;
+   int16_t buffer = 0;
+   int16_t value = 0;
+   int32_t step = 0;
+   int32_t audio = 0;
+   int32_t length = msec*48;
 
-  // unmute output
-  //_playback_start();
+   // unmute output
+   //_playback_start();
 
-  do {
-    // last_attn_level = current_attn_level;
+   step = (32768 * frequency)/48000;
 
-    if (CLASSD->CLASSD_ISR & CLASSD_ISR_DATRDY) {
-      CLASSD->CLASSD_THR = audio;
+   do {
+      // last_attn_level = current_attn_level;
 
-      //buffer = sin(frequency * ((2* 3.14159265359) * i /  48000))*32729;
+      if (CLASSD->CLASSD_ISR & CLASSD_ISR_DATRDY) {
+         CLASSD->CLASSD_THR = audio;
 
-      buffer += frequency;
+         buffer += step;
 
-      value = buffer;
-      audio = value << 16;
-      audio += value;
-      i++;
-      //printf("Audio Value %d\r\n", buffer);
-    }
-  } while (i < length);
+         if (buffer > 65536)
+            buffer -= 65536;
 
-  printf("index %d\n\r",i);
+         value = (isin_S4(buffer) * 32729)/4096;
 
-  // mute output
-  //_playback_stop();
+         audio = value << 16;
+         audio += value;
+         i++;
+
+         //printf("Sin Value of %d = %d\r\n",buffer,value);
+      }
+   } while (i < length);
+
+   // set output to 0
+   CLASSD->CLASSD_THR = 0;
+
+   printf("index %d\n\r",i);
+
+   // mute output
+   //_playback_stop();
 }
 
 int sound_play(uint32_t msec, uint32_t frequency, uint32_t attenuation)

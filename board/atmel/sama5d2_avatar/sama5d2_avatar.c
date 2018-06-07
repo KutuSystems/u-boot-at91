@@ -83,10 +83,10 @@ static void board_uart1_hw_init(void)
 
 static void board_classd_init(void)
 {
-   atmel_pio4_set_f_periph(AT91_PIO_PORTA, 28, 0);	/* D28 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 29, 0);	/* D29 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 30, 0);	/* D30 */
-	atmel_pio4_set_f_periph(AT91_PIO_PORTA, 31, 0);	/* D31 */
+   atmel_pio4_set_f_periph(AT91_PIO_PORTB, 1, 0);	/* D1 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 2, 0);	/* D2 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 3, 0);	/* D3 */
+	atmel_pio4_set_f_periph(AT91_PIO_PORTB, 4, 0);	/* D4 */
 }
 
 
