@@ -12,6 +12,8 @@
 //#include "component_pmc.h"
 #include "component_classd.h"
 
+int32_t dclass_initialised = 0;
+
 bool classd_configure(int audio_clk);
 
 
@@ -34,23 +36,41 @@ int32_t isin_S4(int32_t x)
 }
 
 
-void Custom_Sine_Function_PlayOnce(uint32_t msec, uint32_t frequency)
+void Custom_Sine_Function_PlayOnce(uint32_t msec, uint32_t frequency, uint32_t attenuation)
 {
    uint32_t i = 0;
    int16_t buffer = 0;
    int16_t value = 0;
    int32_t step = 0;
    int32_t audio = 0;
-   int32_t length = msec*48;
+   int32_t length;
+   int32_t sample_rate;
+   int32_t clk;
+   int32_t mr;
+   int32_t intpmr;
 
-   // unmute output
-   //_playback_start();
+   clk = at91_get_periph_generated_clk(ATMEL_ID_CLASSD);
+   printf("AUDIO clock is : %d Hz\r\n", clk);
+   sample_rate = clk/2048;
+   length = (msec*sample_rate)/1000;
+   printf("sample rate is : %d Hz, length is %d samples\r\n", sample_rate,length);
 
-   step = (32768 * frequency)/48000;
+   step = (32768 * frequency)/sample_rate;
+
+   if (attenuation < 77) {
+      // set attenuation
+      intpmr = CLASSD->CLASSD_INTPMR;
+      intpmr &= ~(CLASSD_INTPMR_ATTL_Msk|CLASSD_INTPMR_ATTR_Msk);
+      intpmr |= CLASSD_INTPMR_ATTL(attenuation)|CLASSD_INTPMR_ATTR(attenuation);
+      CLASSD->CLASSD_INTPMR = intpmr;
+
+      // unmute output
+      mr = CLASSD->CLASSD_MR;
+      mr &= ~(CLASSD_MR_LMUTE|CLASSD_MR_RMUTE);
+      CLASSD->CLASSD_MR = mr;
+   }
 
    do {
-      // last_attn_level = current_attn_level;
-
       if (CLASSD->CLASSD_ISR & CLASSD_ISR_DATRDY) {
          CLASSD->CLASSD_THR = audio;
 
@@ -65,23 +85,25 @@ void Custom_Sine_Function_PlayOnce(uint32_t msec, uint32_t frequency)
          audio += value;
          i++;
 
-         //printf("Sin Value of %d = %d\r\n",buffer,value);
       }
    } while (i < length);
 
+   // mute output
+   mr = CLASSD->CLASSD_MR;
+   mr |= (CLASSD_MR_LMUTE|CLASSD_MR_RMUTE);
+   CLASSD->CLASSD_MR = mr;
+
    // set output to 0
    CLASSD->CLASSD_THR = 0;
-
-   printf("index %d\n\r",i);
-
-   // mute output
-   //_playback_stop();
 }
 
 int sound_play(uint32_t msec, uint32_t frequency, uint32_t attenuation)
 {
+   if (dclass_initialised == 0)
+      classd_configure(0);
+
 	//sandbox_sdl_sound_start(frequency);
-	Custom_Sine_Function_PlayOnce(msec,frequency);
+	Custom_Sine_Function_PlayOnce(msec,frequency,attenuation);
 	//sandbox_sdl_sound_stop();
 
 	return 0;
@@ -137,13 +159,13 @@ bool classd_configure(int audio_clk)
 
    /* configure left channel (muted, max attn) */
    mr |= CLASSD_MR_LEN;
-//   mr |= CLASSD_MR_LMUTE;
-//   intpmr |= CLASSD_INTPMR_ATTL(CLASSD_INTPMR_ATTL_Msk);
+   mr |= CLASSD_MR_LMUTE;
+   intpmr |= CLASSD_INTPMR_ATTL(CLASSD_INTPMR_ATTL_Msk);
 
    /* configure right channel (muted, max attn)  */
    mr |= CLASSD_MR_REN;
-//   mr |= CLASSD_MR_RMUTE;
-//   intpmr |= CLASSD_INTPMR_ATTR(CLASSD_INTPMR_ATTL_Msk);
+   mr |= CLASSD_MR_RMUTE;
+   intpmr |= CLASSD_INTPMR_ATTR(CLASSD_INTPMR_ATTL_Msk);
 
    /* De-emphasis Filter */
    //if (desc-> de_emphasis)
@@ -152,6 +174,8 @@ bool classd_configure(int audio_clk)
    /* write configuration */
    CLASSD->CLASSD_MR = mr;
    CLASSD->CLASSD_INTPMR = intpmr;
+
+   dclass_initialised = 1;
 
 	return (CLASSD->CLASSD_INTSR & CLASSD_INTSR_CFGERR) == 0;
 }

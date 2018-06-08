@@ -10,6 +10,8 @@
 #include <fdtdec.h>
 #include <sound.h>
 
+#define MAX_MSECS    10000
+
 DECLARE_GLOBAL_DATA_PTR;
 
 /* Initilaise sound subsystem */
@@ -38,10 +40,6 @@ static int do_play(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 
    if (argc > 1) {
       freq = simple_strtoul(argv[1], NULL, 10);
-      if ((freq > 4) && (freq < 200))
-         return CMD_RET_USAGE;
-
-      // temporary exit
       if (freq < 200)
          return CMD_RET_USAGE;
 
@@ -52,7 +50,7 @@ static int do_play(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 	if (argc > 2) {
       atten = simple_strtoul(argv[2], NULL, 10);
 
-      if (atten > 40)
+      if (atten > 127)
          return CMD_RET_USAGE;
 
        printf("set attenuation at %ddb\n",atten);
@@ -62,8 +60,8 @@ static int do_play(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
    if (argc > 3) {
       msec = simple_strtoul(argv[3], NULL, 10);
 
-      if (msec > 10000) {
-         msec = 10000;
+      if (msec > MAX_MSECS) {
+         msec = MAX_MSECS;
          printf("reduced play to 10 seconds max\n");
       }
       printf("set play length to %d msecs\n",msec);
