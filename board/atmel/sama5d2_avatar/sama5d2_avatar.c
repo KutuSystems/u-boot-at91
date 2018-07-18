@@ -96,6 +96,16 @@ void board_debug_uart_init(void)
 }
 #endif
 
+#ifdef CONFIG_CMD_I2C
+static void board_i2c_init(void)
+{
+   atmel_pio4_set_a_periph(AT91_PIO_PORTD, 4, 0);	/* TWD1 */
+	atmel_pio4_set_a_periph(AT91_PIO_PORTD, 5, 0);	/* TWCK1 */
+}
+
+#endif
+
+
 #ifdef CONFIG_BOARD_EARLY_INIT_F
 int board_early_init_f(void)
 {
@@ -131,7 +141,7 @@ int dram_init(void)
 	return 0;
 }
 
-/*#ifdef CONFIG_CMD_I2C
+#ifdef CONFIG_CMD_I2C
 static int set_ethaddr_from_eeprom(void)
 {
 	const int ETH_ADDR_LEN = 6;
@@ -162,11 +172,18 @@ static int set_ethaddr_from_eeprom(void)
 		return -1;
 	}
 
+   ethaddr[0] = 0xf0;
+   ethaddr[1] = 0x33;
+   ethaddr[2] = 0xf5;
+   ethaddr[3] = 0x7f;
+   ethaddr[4] = 0x1b;
+   ethaddr[5] = 0xf8;
+
 	return eth_setenv_enetaddr(ETHADDR_NAME, ethaddr);
 }
 
 #else
-*/
+
 
 static int set_ethaddr_from_eeprom(void)
 {
@@ -182,9 +199,9 @@ static int set_ethaddr_from_eeprom(void)
 
 	return eth_setenv_enetaddr(ETHADDR_NAME, ethaddr);
 }
-/*
+
 #endif
-*/
+
 
 #ifdef CONFIG_MISC_INIT_R
 int misc_init_r(void)

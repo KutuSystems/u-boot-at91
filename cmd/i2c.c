@@ -1818,8 +1818,9 @@ static int do_i2c_bus_num(cmd_tbl_t *cmdtp, int flag, int argc,
 #else
 		ret = i2c_set_bus_num(bus_no);
 #endif
-		if (ret)
+		if (ret) {
 			printf("Failure changing bus number (%d)\n", ret);
+      }
 	}
 
 	return ret ? CMD_RET_FAILURE : 0;

@@ -689,6 +689,15 @@ config CMD_SOUND
 	     sound init   - set up sound system
 	     sound play   - play a sound
 
+config CMD_MSP430_FW
+	bool "msp430_fw"
+	depends on SOUND
+	help
+	  This provides a firmware update for the msp430.
+
+	     init     - initialise the MSP430 driver
+	     update   - update the MSP430 firmware
+
 config CMD_QFW
 	bool "qfw"
 	select QFW

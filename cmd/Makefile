@@ -39,6 +39,7 @@ obj-$(CONFIG_DATAFLASH_MMC_SELECT) += dataflash_mmc_mux.o
 obj-$(CONFIG_CMD_DATE) += date.o
 obj-$(CONFIG_CMD_DEMO) += demo.o
 obj-$(CONFIG_CMD_SOUND) += sound.o
+obj-$(CONFIG_CMD_MSP430_FW) += msp430_fw.o
 ifdef CONFIG_4xx
 obj-$(CONFIG_CMD_SETGETDCR) += dcr.o
 endif
