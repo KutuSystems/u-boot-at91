@@ -8,6 +8,7 @@
 #include <common.h>
 #include <command.h>
 #include <fdtdec.h>
+#include <asm/arch/atmel_pio4.h>
 #include <msp430_fw.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -45,13 +46,17 @@ static int do_update(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 
 static int do_msp430_reset(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
-	int ret = 0;
 
-	//ret = sound_init(gd->fdt_blob);
-	if (ret) {
-		printf("Reset MSP430 failed\n");
-		return CMD_RET_FAILURE;
-	}
+   // AFE test line
+	atmel_pio4_set_pio_output(AT91_PIO_PORTD, 9, 0);
+   // AFE reset line
+	atmel_pio4_set_pio_output(AT91_PIO_PORTD, 12, 0);
+
+   // delay for 10 ms
+   udelay(10000);
+
+   // release reset line
+	atmel_pio4_set_pio_output(AT91_PIO_PORTD, 12, 1);
 
    printf("Reset MSP430 succeeded\n");
 

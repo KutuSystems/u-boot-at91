@@ -72,6 +72,16 @@ static void board_usb_hw_init(void)
 	atmel_pio4_set_pio_output(AT91_PIO_PORTB, 12, ATMEL_PIO_PUEN_MASK);
 }
 
+static void board_gpio_init(void)
+{
+   // AFE test line
+	atmel_pio4_set_pio_output(AT91_PIO_PORTD, 9, 0);
+   // AFE reset line
+	atmel_pio4_set_pio_output(AT91_PIO_PORTD, 12, 0);
+
+	at91_periph_clk_enable(ATMEL_ID_UART1);
+}
+
 #ifdef CONFIG_DEBUG_UART_BOARD_INIT
 static void board_uart1_hw_init(void)
 {
@@ -130,6 +140,8 @@ int board_init(void)
 #endif
 
    board_classd_init();
+
+   board_gpio_init();
 
 	return 0;
 }
