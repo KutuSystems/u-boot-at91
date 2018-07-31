@@ -106,6 +106,22 @@ void board_debug_uart_init(void)
 }
 #endif
 
+static void board_flexcom4_hw_init(void)
+{
+   // set io pins as flexcom4 io's
+   atmel_pio4_set_b_periph(AT91_PIO_PORTD, 13, ATMEL_PIO_PUEN_MASK);	/* RXD */
+	atmel_pio4_set_b_periph(AT91_PIO_PORTD, 12, 0);	/* TXD */
+
+	at91_periph_clk_enable(ATMEL_ID_FLEXCOM4);
+}
+
+void board_msp430_uart_init(void)
+{
+	board_flexcom4_hw_init();
+}
+
+
+
 #ifdef CONFIG_CMD_I2C
 static void board_i2c_init(void)
 {
@@ -142,6 +158,8 @@ int board_init(void)
    board_classd_init();
 
    board_gpio_init();
+
+   board_msp430_uart_init();
 
 	return 0;
 }

@@ -6,10 +6,22 @@
  */
 
 #include <common.h>
+#include <stdlib.h>
+#include <asm/io.h>
+#include <asm/arch/clk.h>
 #include <command.h>
 #include <fdtdec.h>
 #include <asm/arch/atmel_pio4.h>
 #include <msp430_fw.h>
+
+
+#include "component_msp430.h"
+#include "atmel_serial.h"
+
+int32_t msp430_initialised = 0;
+
+void msp430_configure(void);
+
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -20,15 +32,7 @@ DECLARE_GLOBAL_DATA_PTR;
  */
 static int do_init(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
-	int ret = 0;
-
-	//ret = sound_init(gd->fdt_blob);
-	if (ret) {
-		printf("Initialise MSP430 driver failed\n");
-		return CMD_RET_FAILURE;
-	}
-
-   printf("Initialise MSP430 driver succeeded\n");
+   msp430_configure();
 
 	return 0;
 }
@@ -37,6 +41,9 @@ static int do_init(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 static int do_update(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
    printf("\n\nMSP430 firmware update\n\n");
+
+   if (msp430_initialised == 0)
+      msp430_configure();
 
 
 	printf("MSP430 firmware update complete\n");
@@ -47,9 +54,12 @@ static int do_update(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 static int do_msp430_reset(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
 
-   // AFE test line
+   // set AFE test line low
 	atmel_pio4_set_pio_output(AT91_PIO_PORTD, 9, 0);
-   // AFE reset line
+   // delay for 10 ms
+   udelay(10000);
+
+   // set AFE reset line low
 	atmel_pio4_set_pio_output(AT91_PIO_PORTD, 12, 0);
 
    // delay for 10 ms
@@ -90,6 +100,22 @@ static int do_msp430(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 		return CMD_RET_USAGE;
 }
 
+void msp430_configure(void)
+{
+   Atmel_flexcom *flexcom4_base =  (Atmel_flexcom *)FLEXCOM4_BASE;
+   Atmel_Usart *flexcom4_us = (Atmel_Usart *)FLEXCOM4_US_BASE;
+
+	// enable peripheral clock for usart on FLEXCOM4
+   at91_periph_clk_enable(ATMEL_ID_FLEXCOM4);
+
+   // set flexcom4 to uart mode
+	writel(0, &flexcom4_base->FLEX_MR);
+	writel(0, &flexcom4_us->US_MR);
+
+   msp430_initialised = 1;
+
+	return;
+}
 U_BOOT_CMD(
 	msp430, 5, 0, do_msp430,
 	"msp430 sub-system",
